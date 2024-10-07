@@ -40,6 +40,18 @@ docker-down:
 	@echo "Stopping services..."
 	docker-compose -f $(DOCKER_COMPOSE_FILE) down
 
+test:
+	@echo "Running tests..."
+	go test ./...
+
+test_wrk:
+	@echo "WRK tests..."
+	wrk -t12 -c400 -d30s http://localhost:8080/order/b563feb7b2b84b6test
+
+test_vegeta:
+	@echo "Vegeta tests..."
+	cat tests/targets.txt | vegeta attack -duration=30s -rate=100 | vegeta report
+
 clean:
 	@echo "Cleaning up binaries..."
 	rm -f $(MAIN_APP) $(PRODUCER_APP)

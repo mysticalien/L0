@@ -39,22 +39,43 @@ func ConsumeOrders(cfg *config.KafkaConfig, cache *cache.Cache, dbStorage *stora
 			continue
 		}
 
+		var orders []map[string]interface{}
+		err = json.Unmarshal(msg.Value, &orders)
+		if err == nil {
+			log.Println("Processing JSON array of orders...")
+			processOrders(orders, cache, dbStorage, cfg, msg.Value)
+			continue
+		}
+
 		var order map[string]interface{}
-		if err := json.Unmarshal(msg.Value, &order); err != nil {
-			log.Printf("Error unmarshalling order: %v", err)
+		err = json.Unmarshal(msg.Value, &order)
+		if err == nil {
+			log.Println("Processing single order JSON...")
+			processOrder(order, cache, dbStorage, cfg, msg.Value)
 			continue
 		}
 
-		orderUID, ok := order["order_uid"].(string)
-		if !ok || orderUID == "" {
-			log.Println("Invalid order format: missing order_uid")
-			continue
-		}
+		log.Printf("Error unmarshalling message: %v", err)
+	}
+}
 
-		cache.Set(orderUID, msg.Value)
+func processOrders(orders []map[string]interface{}, cache *cache.Cache, dbStorage *storage.Storage, cfg *config.KafkaConfig, data []byte) {
+	for _, order := range orders {
+		processOrder(order, cache, dbStorage, cfg, data) // Передаем оригинальные данные
+	}
+}
 
-		if err := saveWithRetry(context.Background(), dbStorage, orderUID, msg.Value, int(cfg.Retries), cfg.RetryDelay); err != nil {
-			log.Printf("Error saving order to DB after retries: %v", err)
-		}
+func processOrder(order map[string]interface{}, cache *cache.Cache, dbStorage *storage.Storage, cfg *config.KafkaConfig, data []byte) {
+	orderUID, ok := order["order_uid"].(string)
+	if !ok || orderUID == "" {
+		log.Println("Invalid order format: missing order_uid")
+		return
+	}
+
+	cache.Set(orderUID, data)
+	log.Printf("Caching order %s", orderUID)
+
+	if err := saveWithRetry(context.Background(), dbStorage, orderUID, data, int(cfg.Retries), cfg.RetryDelay); err != nil {
+		log.Printf("Error saving order to DB after retries: %v", err)
 	}
 }
