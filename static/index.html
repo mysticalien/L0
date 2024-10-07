@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orders</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f4f8; /* Светло-серый фон */
+            color: #333; /* Темный текст для читаемости */
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh; /* Центрирование по вертикали */
+            overflow: auto; /* Позволяет прокручивать содержимое */
+        }
+        h1 {
+            color: #5a67d8; /* Нежно-синий цвет заголовка */
+            margin-bottom: 20px;
+        }
+        form {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        input[type="text"] {
+            padding: 10px;
+            border: 2px solid #5a67d8; /* Нежно-синий цвет границы */
+            border-radius: 5px;
+            margin-right: 10px;
+            width: 200px;
+            transition: border-color 0.3s;
+        }
+        input[type="text"]:focus {
+            border-color: #3b5baf; /* Темнее синий при фокусе */
+            outline: none; /* Убираем стандартный контур */
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #5a67d8; /* Нежно-синий цвет кнопки */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold; /* Полужирный текст для кнопки */
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #4c51bf; /* Темнее синий при наведении */
+        }
+        #orderDetails {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #fff; /* Белый фон для вывода */
+            border: 1px solid #e2e8f0; /* Светло-серая граница */
+            border-radius: 5px;
+            white-space: pre-wrap; /* Позволяет сохранить форматирование */
+            display: none; /* Скрыть по умолчанию */
+            width: 100%; /* Установить ширину на 100% */
+            max-width: 600px; /* Установить максимальную ширину */
+            text-align: left; /* Выровнять текст по левому краю */
+            overflow: auto; /* Позволяет прокручивать содержимое */
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); /* Тень для блока */
+        }
+        .json-key {
+            color: #5a67d8; /* Нежно-синий цвет ключей */
+            font-weight: bold; /* Полужирный текст для ключей */
+        }
+        .json-string {
+            color: #e53e3e; /* Красный цвет строковых значений */
+        }
+        .json-number {
+            color: #38a169; /* Зеленый цвет числовых значений */
+        }
+        .json-object, .json-array {
+            margin-left: 20px; /* Отступ для вложенных объектов */
+        }
+    </style>
+</head>
+<body>
+<h1>Order Details</h1>
+<form id="orderForm">
+    <input type="text" id="orderId" placeholder="Enter Order ID" required>
+    <button type="submit">Get Order</button>
+</form>
+<div id="orderDetails"></div>
+
+<script>
+    function formatJSON(data) {
+        return JSON.stringify(data, null, 2)
+            .replace(/"([^"]+)":/g, '<span class="json-key">"$1":</span>') // Ключи
+            .replace(/: "([^"]+)"/g, ': <span class="json-string">"$1"</span>') // Строки
+            .replace(/: (\d+)/g, ': <span class="json-number">$1</span>') // Числа
+            .replace(/([{,])\s*\[/g, '$1<span class="json-array">[</span>') // Массивы
+            .replace(/([{,])\s*\{/g, '$1<span class="json-object">{</span>') // Объекты
+            .replace(/}\s*([,}])/g, '}<span class="json-object"></span>$1') // Закрывающие объекты
+            .replace(/\]\s*([,}])/g, ']<span class="json-array"></span>$1'); // Закрывающие массивы
+    }
+
+    document.getElementById("orderForm").addEventListener("submit", function(e) {
+        e.preventDefault();
+        var orderId = document.getElementById("orderId").value;
+        fetch(`/order/${orderId}`)
+            .then(response => {
+                if (!response.ok) throw new Error('Order not found!');
+                return response.json();
+            })
+            .then(data => {
+                const formattedData = formatJSON(data); // Форматируем JSON для отображения
+                document.getElementById("orderDetails").innerHTML = formattedData;
+                document.getElementById("orderDetails").style.display = 'block'; // Показать блок с деталями
+            })
+            .catch(error => {
+                document.getElementById("orderDetails").innerHTML = error.message;
+                document.getElementById("orderDetails").style.display = 'block'; // Показать блок с сообщением об ошибке
+            });
+    });
+</script>
+</body>
+</html>

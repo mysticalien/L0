@@ -1,0 +1,21 @@
+server:
+  env: "development"
+  port: ":8080"
+  timeout: "5s"
+
+database:
+  database_url: "postgres://celiacsi:123@localhost:5432/L0?sslmode=disable"
+
+kafka:
+  broker: "localhost:9092"
+  topic: "orders"
+  group_id: "my_kafka_group"
+  retries: 3
+  retry_delay: "2s"
+
+cache:
+  expiration: "10m"
+  cleanup_interval: "5m"
+
+logger:
+  level: "debug"
