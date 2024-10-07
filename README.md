@@ -4,7 +4,7 @@
 
 ### 🎥 Видеодемонстрация работы сервиса:
 
-
+https://github.com/user-attachments/assets/963ffffa-52b5-42e1-a032-ff6b09ed4db9
 
 ---
 
